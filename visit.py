@@ -1,6 +1,6 @@
 from copy import deepcopy
 
-from solidity_parser.parser import Node
+from solidity_parser.parser import Node, objectify
 
 
 class ASTVisitor:
@@ -15,7 +15,10 @@ class ASTVisitor:
     def _reset_count(self):
         self._count = {
             'name': '',
-            'assignment': 0,  # 函数块内赋值（包括自增自减语句）的个数
+            'normal_assignment': 0,  # 函数块内等号赋值的个数
+            'assignment': 0, # 函数块内所有赋值语句（比如等号，++，+=等等）
+            'state_var_normal_assignment': 0, # 给状态变量进行等号赋值语句个数
+            'state_var_assign': 0, # 给状态变量进行所有赋值语句（比如等号，++，+=等等）个数
             'if': 0,  # 函数块内if块的个数
             'loop': 0,  # 函数块内循环块的个数
             'var_definition': 0,  # 函数块内变量定义的个数
@@ -33,6 +36,8 @@ class ASTVisitor:
         }
 
     def visit_ContractDefinition(self, node):
+        obj = objectify(node)
+        self._state_vars = obj.contracts[node['name']].stateVars.keys()
         self._called_functions = set()
 
     def visited_ContractDefinition(self, node):
@@ -118,8 +123,27 @@ class ASTVisitor:
 
         if node['expression']['operator'] in ('=', '+=', '-=', '++', '--', '*=', '/=', '<<=', '>>='):
             self._count['assignment'] += 1
+            # Check lhs is state-var or not
+            # ( check the 'most left' part is in state-var array or not )
+            # ( only considered 3 situations, which are common, sv/sv.x/sv[x] )
+            lhs = node['expression']['left'] if 'left' in node['expression'] else node['expression']['subExpression']
+            cond1 = lhs['type'] == 'Identifier' and lhs['name'] in self._state_vars
+            cond2 = lhs['type'] == 'MemberAccess' and lhs['expression']['type'] == 'Identifier' \
+                    and lhs['expression']['name'] in self._state_vars
+            cond3 = lhs['type'] == 'IndexAccess' and lhs['base']['type'] == 'Identifier' \
+                    and lhs['base']['name'] in self._state_vars
+            lhs_is_state = cond1 or cond2 or cond3
+
+            if lhs_is_state:
+                self._count['state_var_assign'] += 1
+        else:
+            return
 
         if node['expression']['operator'] == '=':
+            self._count['normal_assignment'] += 1
+            if lhs_is_state:
+                self._count['state_var_normal_assignment'] += 1
+
             self._normal_assign_analysis(node['expression']['left'], node['expression']['right'])
 
     @staticmethod

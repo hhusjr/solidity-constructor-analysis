@@ -16,6 +16,9 @@ def travel(result, path, counter, lock):
         try:
             ast = parse_file(path)
         except TypeError:
+            # Do NOT forget it, otherwise go to dead-loop
+            with lock:
+                counter.value += 1
             return
         result.extend(ASTVisitor.run(ast).get_result())
         with lock:
