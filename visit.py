@@ -97,6 +97,8 @@ class ASTVisitor:
                 self._count['lhs_balance_owner_assign'] += 1
 
     def visit_ExpressionStatement(self, node):
+        if node is None:
+            print('Node None')
         if node['expression']['type'] == 'FunctionCall':
             # Some other situations, ignore
             if 'name' not in node['expression']['expression']:
