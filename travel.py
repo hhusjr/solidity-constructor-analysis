@@ -15,7 +15,7 @@ def travel(result, path, counter, lock):
     try:
         try:
             ast = parse_file(path)
-        except TypeError:
+        except Exception:
             # Do NOT forget it, otherwise go to dead-loop
             with lock:
                 counter.value += 1
@@ -24,6 +24,8 @@ def travel(result, path, counter, lock):
         with lock:
             counter.value += 1
     except Exception:
+        with lock:
+            counter.value += 1
         traceback.print_exc()
 
 
