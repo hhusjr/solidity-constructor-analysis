@@ -33,11 +33,8 @@ class ASTVisitor:
             'visibility': [],  # 可见性
             'modifier_names': [],  # 修饰符名称列表
             'is_called': False,  # 是否被外界调用
-            'return': 0,  # return语句个数
+            'is_return': False,  # 是否有返回值
         }
-
-    def visit_ReturnStatement(self, node):
-        self._count['return'] += 1
 
     def visit_ContractDefinition(self, node):
         obj = objectify(node)
@@ -54,6 +51,7 @@ class ASTVisitor:
         self._count['is_constructor'] = node['isConstructor']
         self._count['visibility'] = node['visibility']
         self._count['modifier_names'] = [x['name'] for x in node['modifiers']]
+        self._count['is_return'] = True if node['returnParameters'] else False
 
     def visited_FunctionDefinition(self, node):
         self._result.append(deepcopy(self._count))
