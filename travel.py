@@ -34,6 +34,7 @@ def daemon(total, counter):
             break
         last_len = length
         time.sleep(2)
+    print('Scan OK')
     pbar.close()
 
 
