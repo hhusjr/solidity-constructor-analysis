@@ -98,7 +98,7 @@ class ASTVisitor:
 
     def visit_ExpressionStatement(self, node):
         if node['expression'] is None:
-            print('Node None', node)
+            return
         if node['expression']['type'] == 'FunctionCall':
             # Some other situations, ignore
             if 'name' not in node['expression']['expression']:
