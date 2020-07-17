@@ -32,8 +32,12 @@ class ASTVisitor:
             'is_constructor': None,  # 是否为构造函数
             'visibility': [],  # 可见性
             'modifier_names': [],  # 修饰符名称列表
-            'is_called': False
+            'is_called': False,  # 是否被外界调用
+            'return': 0,  # return语句个数
         }
+
+    def visit_ReturnStatement(self, node):
+        self._count['return'] += 1
 
     def visit_ContractDefinition(self, node):
         obj = objectify(node)
