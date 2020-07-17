@@ -1,5 +1,7 @@
 import os
 import time
+import traceback
+
 import tqdm as tqdm
 from solidity_parser import parse_file
 from multiprocessing import Pool, Manager
@@ -18,8 +20,8 @@ def travel(result, path, counter, lock):
         result.extend(ASTVisitor.run(ast).get_result())
         with lock:
             counter.value += 1
-    except Exception as e:
-        print(e)
+    except Exception:
+        traceback.print_exc()
 
 
 def daemon(total, counter):
