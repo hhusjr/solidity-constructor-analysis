@@ -46,7 +46,7 @@ def daemon(total, counter):
 if __name__ == '__main__':
     manager = Manager()
     rs = manager.list()
-    contracts = list(os.scandir(TRAIN_DATA_PATH))
+    contracts = sorted(list(os.scandir(TRAIN_DATA_PATH)), key=lambda x: x.path)
     cnt = manager.Value('i', 0)
     lck = manager.Lock()
 

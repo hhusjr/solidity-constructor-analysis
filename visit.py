@@ -7,6 +7,8 @@ class ASTVisitor:
     def __init__(self):
         self._result = []
         self._called_functions = None
+        self._state_vars = None
+        self._total_fn_cnt = 0
         self._reset_count()
 
     def get_result(self):
@@ -15,6 +17,7 @@ class ASTVisitor:
     def _reset_count(self):
         self._count = {
             'name': '',
+            'position': 0, # 函数在该合约中的位置
             'normal_assignment': 0,  # 函数块内等号赋值的个数
             'assignment': 0, # 函数块内所有赋值语句（比如等号，++，+=等等）
             'state_var_normal_assignment': 0, # 给状态变量进行等号赋值语句个数
@@ -40,6 +43,7 @@ class ASTVisitor:
         obj = objectify(node)
         self._state_vars = obj.contracts[node['name']].stateVars.keys()
         self._called_functions = set()
+        self._total_fn_cnt = 0
 
     def visited_ContractDefinition(self, node):
         for i in range(len(self._result)):
@@ -47,11 +51,17 @@ class ASTVisitor:
 
     def visit_FunctionDefinition(self, node):
         self._reset_count()
+        if (not node['isConstructor'] and node['name'] == '') or len(node['body']) == 0:
+            return True
+
         self._count['name'] = node['name']
+        self._count['position'] = self._total_fn_cnt
         self._count['is_constructor'] = node['isConstructor']
         self._count['visibility'] = node['visibility']
         self._count['modifier_names'] = [x['name'] for x in node['modifiers']]
         self._count['is_return'] = True if node['returnParameters'] else False
+
+        self._total_fn_cnt += 1
 
     def visited_FunctionDefinition(self, node):
         self._result.append(deepcopy(self._count))
